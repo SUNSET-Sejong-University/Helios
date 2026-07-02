@@ -29,6 +29,10 @@ void csi_raw_callback(void *ctx, wifi_csi_info_t *info)
 void setup()
 {
   Serial.begin(115200);
+  delay(200);
+  Serial.println();
+  Serial.println("BOOT OK - CSI Extractor Starting...");
+
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
 
@@ -51,5 +55,10 @@ void setup()
 
 void loop()
 {
-  delay(1000);
+  static unsigned long last = 0;
+  if (millis() - last > 2000)
+  {
+    last = millis();
+    Serial.println("ALIVE");
+  }
 }

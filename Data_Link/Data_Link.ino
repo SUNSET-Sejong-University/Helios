@@ -1,31 +1,27 @@
 void setup()
 {
-  // opens the high-speed USB CDC connection directly to PC
-  Serial.begin(921600);
+  Serial.begin(115200);          // native USB to PC
+  while (!Serial) { ; }          // wait for the monitor to actually open (native USB)
+  Serial.println("SAMD21 bridge up");
 
-  // opens the internal hardware serial link connected directly to the u-blox module
-  Serial1.begin(921600);
+  SerialNina.begin(115200);      // the UART actually wired to the NINA/ESP32
 
-  // takes control of internal power and state pins
-  pinMode(NINA_RESETN, OUTPUT);
   pinMode(NINA_GPIO0, OUTPUT);
+  pinMode(NINA_RESETN, OUTPUT);
 
-  // boots the esp32 into standard app mode, out of bootloader state
+  // clean reset into app mode: GPIO0 high, then pulse RESET low -> high
   digitalWrite(NINA_GPIO0, HIGH);
+  digitalWrite(NINA_RESETN, LOW);
+  delay(100);
   digitalWrite(NINA_RESETN, HIGH);
+  Serial.println("ESP32 reset released");
 }
 
 void loop()
 {
-  // pulls high frequency CSI packets out of the ESP32 and stream to the USB port
-  while (Serial1.available())
-  {
-    Serial.write(Serial1.read());
-  }
+  static unsigned long last = 0;
+  if (millis() - last > 1000) { last = millis(); Serial.println("[bridge alive]"); }
 
-  // route configuration commands from PC down to ESP32 if needed
-  while (Serial.available())
-  {
-    Serial1.write(Serial.read());
-  }
+  while (SerialNina.available()) Serial.write(SerialNina.read());
+  while (Serial.available())     SerialNina.write(Serial.read());
 }
