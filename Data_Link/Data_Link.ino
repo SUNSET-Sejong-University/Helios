@@ -14,14 +14,11 @@ void setup()
   digitalWrite(NINA_RESETN, LOW);
   delay(100);
   digitalWrite(NINA_RESETN, HIGH);
-  Serial.println("ESP32 reset released");
+  //Serial.println("ESP32 reset released");
 }
 
 void loop()
 {
-  static unsigned long last = 0;
-  if (millis() - last > 1000) { last = millis(); Serial.println("[bridge alive]"); }
-
   while (SerialNina.available()) Serial.write(SerialNina.read());
   while (Serial.available())     SerialNina.write(Serial.read());
 }
