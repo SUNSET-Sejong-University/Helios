@@ -73,7 +73,7 @@ class CSIStream:
     """Background reader: parses lines, learns the null mask, keeps a rolling waterfall."""
     
     def __init__(self, args):
-        self.args = arfs
+        self.args = args
         self.lock =threading.Lock()
         self.n_sub = None
         self.null_mask = None
@@ -83,7 +83,7 @@ class CSIStream:
         self.channel = None
         self.count = 0
         self.vmax = 60.0
-        self._calb = []
+        self._calib = []
         self._recorded = [] if args.record else None
     
     def run(self):
@@ -102,10 +102,15 @@ class CSIStream:
         if len(amp) != self.n_sub:
             return              # a different-length packet -> skip so the matrix stays rectangular
         
-        self.rssi, self.channel, self.count = rssi. channel, self.count + 1
+        self.rssi, self.channel, self.count = rssi, channel, self.count + 1
         self.latest_amp = amp
-        if len(self._calib) == CALIB_PACKETS:
-            self._build_mask()
+        self.waterfall = np.roll(self.waterfall, -1, axis=0)
+        self.waterfall[-1] = amp
+        
+        if len(self._calib) < CALIB_PACKETS:
+            self._calib.append(amp)
+            if len(self._calib) == CALIB_PACKETS:
+                self._build_mask()
         
         if self._recorded is not None:
             self._recorded.append(amp)
@@ -169,7 +174,7 @@ def main():
         if snap is None:
             return line, im
         amp, fall, rssi, ch, count, vmax = snap
-        x = np.arrange(len(amp))
+        x = np.arange(len(amp))
 
         line.set_data(x, amp)
         ax_line.set_xlim(0, max(1, len(amp) - 1))

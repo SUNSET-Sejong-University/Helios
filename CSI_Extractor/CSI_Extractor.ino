@@ -11,8 +11,8 @@
 #include "lwip/ip_addr.h"
 #include <string.h>
 
-const char *SSID = "DLive_1C7A";
-const char *PASSWORD = "E0012D1C79";
+const char *SSID = "MINESLAB2";
+const char *PASSWORD = "mines2026";
 
 #define PING_INTERVAL_MS 100  // 10 pings/sec; ~ceiling for ASCII CSI over the 115200 link
 #define CSI_MAX_LEN 512       // generous cap for one CSI buffer
