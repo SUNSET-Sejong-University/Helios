@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HELIOS — WiFi CSI Sensing Observatory</title>
+  <style>
+    :root {
+      --bg: #070b12;
+      --panel: rgba(13, 20, 33, .92);
+      --border: #1c2a41;
+      --border-hi: #2b4166;
+      --green: #7CFF3F;
+      --blue: #4A9EFF;
+      --coral: #FF5C5C;
+      --amber: #FFB020;
+      --muted: #587291;
+      --text: #C9D8EC;
+      --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 20% 0%, rgba(74, 158, 255, .10), transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 90%, rgba(124, 255, 63, .05), transparent 60%);
+    }
+
+    .wrap {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 22px
+    }
+
+    /* ---------- header ---------- */
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 18px
+    }
+
+    .brand h1 {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -.5px
+    }
+
+    .brand h1 span {
+      color: var(--green)
+    }
+
+    .brand p {
+      font-size: 10px;
+      letter-spacing: 2.4px;
+      color: var(--muted);
+      margin-top: 4px;
+      text-transform: uppercase
+    }
+
+    .badges {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      font-size: 10px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted)
+    }
+
+    .badge.live {
+      border-color: rgba(124, 255, 63, .4);
+      color: var(--green)
+    }
+
+    .badge.live .dot {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s infinite
+    }
+
+    .badge.off {
+      border-color: rgba(255, 92, 92, .4);
+      color: var(--coral)
+    }
+
+    .badge.off .dot {
+      background: var(--coral)
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: .35
+      }
+    }
+
+    /* ---------- grid ---------- */
+    .grid {
+      display: grid;
+      grid-template-columns: 250px 1fr 250px;
+      gap: 16px;
+      align-items: start
+    }
+
+    @media(max-width:1100px) {
+      .grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel);
+      padding: 16px;
+      backdrop-filter: blur(6px);
+    }
+
+    .panel+.panel {
+      margin-top: 16px
+    }
+
+    .panel h2 {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 500;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ---------- metric rows ---------- */
+    .metric {
+      margin-bottom: 16px
+    }
+
+    .metric:last-child {
+      margin-bottom: 0
+    }
+
+    .metric .k {
+      font-size: 10px;
+      letter-spacing: 1.4px;
+      color: var(--muted);
+      text-transform: uppercase
+    }
+
+    .metric .v {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-top: 2px
+    }
+
+    .metric .u {
+      font-size: 11px;
+      color: var(--muted);
+      margin-left: 5px;
+      font-weight: 400
+    }
+
+    .bar {
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 7px
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      width: 0;
+      transition: width .25s ease
+    }
+
+    .kv {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      font-size: 12px
+    }
+
+    .kv span:first-child {
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 10px
+    }
+
+    .kv b {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums
+    }
+
+    /* ---------- locked panels (the honest bit) ---------- */
+    .locked {
+      position: relative;
+      opacity: .62
+    }
+
+    .locked .v {
+      color: var(--muted)
+    }
+
+    .lock-tag {
+      display: inline-block;
+      font-size: 8px;
+      letter-spacing: 1.6px;
+      color: var(--amber);
+      border: 1px solid rgba(255, 176, 32, .35);
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .why {
+      font-size: 10px;
+      line-height: 1.5;
+      color: var(--muted);
+      margin-top: 6px
+    }
+
+    /* ---------- stage ---------- */
+    .stage {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .rf {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    .figure-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2
+    }
+
+    #figure {
+      width: 150px;
+      height: 300px;
+      transition: filter .4s ease
+    }
+
+    .st-EMPTY #figure {
+      filter: none;
+      opacity: .28
+    }
+
+    .st-STILL #figure {
+      filter: drop-shadow(0 0 14px rgba(124, 255, 63, .5));
+      opacity: .95
+    }
+
+    .st-MOVING #figure {
+      filter: drop-shadow(0 0 26px rgba(124, 255, 63, .85));
+      opacity: 1
+    }
+
+    .state-tag {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      z-index: 3;
+      font-size: 11px;
+      letter-spacing: 2.4px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      text-transform: uppercase;
+    }
+
+    .st-EMPTY .state-tag {
+      color: var(--muted)
+    }
+
+    .st-STILL .state-tag {
+      color: var(--green);
+      border-color: rgba(124, 255, 63, .4)
+    }
+
+    .st-MOVING .state-tag {
+      color: var(--green);
+      border-color: rgba(124, 255, 63, .75);
+      box-shadow: 0 0 16px rgba(124, 255, 63, .2)
+    }
+
+    .stage-note {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      z-index: 3;
+      text-align: right;
+      font-size: 9px;
+      letter-spacing: 1.4px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ---------- canvases ---------- */
+    .canvas-block {
+      margin-top: 14px;
+      position: relative;
+      z-index: 2
+    }
+
+    .canvas-block h3 {
+      font-size: 9px;
+      letter-spacing: 1.8px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    canvas {
+      width: 100%;
+      display: block;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #04070d;
+    }
+
+    #waterfall {
+      height: 150px;
+      image-rendering: pixelated
+    }
+
+    #rawfall {
+      height: 150px;
+      image-rendering: pixelated
+    }
+
+    #bars {
+      height: 88px
+    }
+
+    footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 9px;
+      letter-spacing: 1.4px;
+      color: var(--muted);
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      margin-right: 6px
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      * {
+        animation: none !important;
+        transition: none !important
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <header>
+      <div class="brand">
+        <h1><span>π</span> Helios</h1>
+        <p>WiFi CSI Sensing Observatory</p>
+      </div>
+      <div class="badges">
+        <div class="badge off" id="link"><span class="dot"></span><span id="link-text">Offline</span></div>
+        <div class="badge"><span id="rate">0.0</span>&nbsp;Hz</div>
+        <div class="badge"><span id="pkts">0</span>&nbsp;pkts</div>
+      </div>
+    </header>
+
+    <div class="grid">
+
+      <!-- ================= LEFT ================= -->
+      <div>
+        <div class="panel">
+          <h2>Activity</h2>
+          <div class="metric">
+            <div class="k">Classified state</div>
+            <div class="v" id="posture" style="margin-top:4px">—</div>
+            <div class="bar"><i id="posture-bar" style="background:var(--green)"></i></div>
+            <div class="why" id="posture-why">Single-link classifier — motion-based,
+              room-specific. Load a model in csi_metrics.py.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= STAGE ================= -->
+      <div class="stage st-EMPTY" id="stage">
+        <svg class="rf" viewBox="0 0 900 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g fill="none" stroke="#4A9EFF" stroke-width="1">
+            <circle cx="120" cy="250" r="80" opacity=".30" />
+            <circle cx="120" cy="250" r="150" opacity=".22" />
+            <circle cx="120" cy="250" r="230" opacity=".15" />
+            <circle cx="120" cy="250" r="320" opacity=".09" />
+            <circle cx="120" cy="250" r="420" opacity=".05" />
+          </g>
+          <g stroke="#4A9EFF" stroke-width="1" opacity=".18">
+            <line x1="120" y1="250" x2="800" y2="250" />
+            <polyline points="120,250 450,60 800,240" fill="none" />
+            <polyline points="120,250 450,470 800,262" fill="none" />
+          </g>
+        </svg>
+
+        <div class="state-tag" id="state-tag">Empty</div>
+        <div class="stage-note">
+          Live from 1 antenna · <span id="chan">ch —</span><br>
+          Posture classifier: not trained yet
+        </div>
+
+        <div class="figure-wrap">
+          <svg id="figure" viewBox="0 0 100 200" aria-label="Occupancy figure">
+            <g fill="none" stroke="#7CFF3F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="50" cy="22" r="12" />
+              <line x1="50" y1="34" x2="50" y2="108" />
+              <line x1="50" y1="52" x2="26" y2="84" />
+              <line x1="50" y1="52" x2="74" y2="84" />
+              <line x1="50" y1="108" x2="34" y2="164" />
+              <line x1="50" y1="108" x2="66" y2="164" />
+            </g>
+            <g fill="#7CFF3F" opacity=".85">
+              <circle cx="26" cy="84" r="2.6" />
+              <circle cx="74" cy="84" r="2.6" />
+              <circle cx="34" cy="164" r="2.6" />
+              <circle cx="66" cy="164" r="2.6" />
+            </g>
+          </svg>
+        </div>
+
+        <div class="canvas-block">
+          <h3>Activity history — classified state over time (from oneM2M)</h3>
+          <canvas id="waterfall"></canvas>
+        </div>
+
+        <div class="canvas-block">
+          <h3>Raw CSI waterfall — amplitude over time <span style="color:var(--amber)">· local feed, not via
+              oneM2M</span></h3>
+          <canvas id="rawfall"></canvas>
+        </div>
+      </div>
+
+      <!-- ================= RIGHT ================= -->
+      <div>
+        <div class="panel">
+          <h2>oneM2M source</h2>
+          <div class="kv"><span>CSE</span><b id="ch">cse-in</b></div>
+          <div class="kv"><span>AE</span><b>wifi-sensing</b></div>
+          <div class="kv"><span>Reading</span><b>activity · presence</b></div>
+          <div class="why" style="margin-top:8px">This dashboard is a oneM2M consumer.
+            Raw CSI never enters the CSE — only classified results do.</div>
+        </div>
+
+        <div class="panel">
+          <h2>Presence</h2>
+          <div class="metric">
+            <div class="v" id="presence" style="font-size:22px;letter-spacing:2px">EMPTY</div>
+            <div class="why" id="presence-why">From motion and breathing. The IR sensor
+              will become the authoritative trigger.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="legend">
+        <span><i style="background:var(--green)"></i>measured</span>
+        <span><i style="background:var(--amber)"></i>locked by hardware</span>
+        <span><i style="background:var(--blue)"></i>RF</span>
+      </div>
+      <div id="status">Waiting for csi_metrics.py on ws://localhost:8765</div>
+    </footer>
+  </div>
+
+  <script>
+    /* ================= RuView reads from the oneM2M CSE =================
+       No serial, no websocket. This dashboard is a oneM2M CONSUMER: it polls the
+       ACME CSE's activity + presence containers over HTTP and renders the latest
+       classification. Raw CSI (waterfall / subcarrier bars) is intentionally NOT
+       here -- it never enters the service layer. This UI shows what oneM2M carries. */
+
+    const CSE_BASE = "http://localhost:8080";
+    const CSE_NAME = "cse-in";
+    const AE = "wifi-sensing";
+    const ORIGINATOR = "Cwifisensing";      // same AE the ingest script registered
+    const POLL_MS = 1000;
+
+    const el = id => document.getElementById(id);
+    const stage = el("stage");
+
+    let rqi = 0;
+    async function cseGet(path) {
+      const res = await fetch(`${CSE_BASE}/${CSE_NAME}/${path}`, {
+        headers: {
+          "X-M2M-Origin": ORIGINATOR,
+          "X-M2M-RI": "ruview" + (rqi++),
+          "X-M2M-RVI": "3",
+          "Accept": "application/json",
+        },
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    }
+
+    // latest contentInstance content from a container.
+    // Prefer the 'la' (latest) virtual resource -- oneM2M's purpose-built "newest
+    // instance" endpoint, one small transfer, always current. Fall back to a bounded
+    // child fetch only if 'la' isn't resolvable. (An earlier lim=5 fetch returned the
+    // OLDEST five in creation order, which is why the panel was stuck on stale data.)
+    async function latest(container) {
+      // primary: the latest virtual resource
+      try {
+        const j = await cseGet(`${AE}/${container}/la`);
+        if (j["m2m:cin"] && j["m2m:cin"].con !== undefined) return j["m2m:cin"].con;
+      } catch (e) { /* fall through */ }
+
+      // fallback: fetch children and take newest by creation time
+      try {
+        const j = await cseGet(`${AE}/${container}?ty=4&rcn=4`);
+        const cnt = j["m2m:cnt"] || {};
+        let cins = cnt["m2m:cin"];
+        if (!cins) return null;
+        if (!Array.isArray(cins)) cins = [cins];
+        if (cins.length === 0) return null;
+        cins.sort((a, b) => String(a.ct).localeCompare(String(b.ct)));
+        return cins[cins.length - 1].con;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    /* ---------- activity history strip (this replaces the raw waterfall) ---------- */
+    const strip = el("waterfall");
+    const sctx = strip.getContext("2d");
+    const COLORS = { walking: "#7CFF3F", still: "#4A9EFF", empty: "#1c2a41" };
+    const hist = [];              // recent {label, conf}
+    const HISTN = 120;
+
+    function drawStrip() {
+      const w = strip.clientWidth, h = 150;
+      if (strip.width !== w) { strip.width = w; strip.height = h; }
+      sctx.clearRect(0, 0, w, h);
+      const bw = w / HISTN;
+      for (let i = 0; i < hist.length; i++) {
+        const item = hist[i];
+        sctx.fillStyle = COLORS[item.label] || "#1c2a41";
+        sctx.globalAlpha = 0.35 + 0.6 * (item.conf || 0);
+        sctx.fillRect(i * bw, 0, Math.ceil(bw) + 1, h);
+      }
+      sctx.globalAlpha = 1;
+    }
+
+    /* ---------- render one poll ---------- */
+    function apply(activity, presence) {
+      // presence is authoritative and comes ONLY from the presence container
+      const present = !!(presence && presence.present === 1);
+
+      // when absent, don't show stale activity from a previous presence
+      const label = present
+        ? (activity && activity.activity ? activity.activity : "still")
+        : "empty";
+      const conf = (present && activity && activity.confidence != null)
+        ? activity.confidence : 0;
+      const cls = label.toUpperCase();
+
+      const figState = cls === "WALKING" ? "MOVING" : cls === "EMPTY" ? "EMPTY" : "STILL";
+      stage.className = "stage st-" + figState;
+      el("state-tag").textContent = cls;
+
+      el("posture").textContent = cls;
+      el("posture-bar").style.width = (conf * 100) + "%";
+      el("posture-why").textContent = present
+        ? `Confidence ${(conf * 100).toFixed(0)}% · from oneM2M activity container`
+        : "No presence — classification gated off";
+
+      el("presence").textContent = present ? "PRESENT" : "ABSENT";
+      el("presence").style.color = present ? "var(--green)" : "var(--muted)";
+      el("presence-why").textContent = present
+        ? "PIR triggered — CSI classification active."
+        : "No PIR trigger — classification gated off.";
+
+      // history strip
+      hist.push({ label: label, conf: conf });
+      if (hist.length > HISTN) hist.shift();
+      drawStrip();
+    }
+
+    /* ---------- poll loop ---------- */
+    async function poll() {
+      try {
+        const [activity, presence] = await Promise.all([
+          latest("activity").catch(() => null),
+          latest("presence").catch(() => null),
+        ]);
+        el("link").className = "badge live";
+        el("link-text").textContent = "CSE";
+        el("status").textContent = "Reading from oneM2M · " + CSE_BASE + "/" + CSE_NAME;
+        apply(activity, presence);
+      } catch (e) {
+        el("link").className = "badge off";
+        el("link-text").textContent = "No CSE";
+        el("status").textContent = "Cannot reach CSE — is acmecse running on " + CSE_BASE + "? " + e;
+      }
+      setTimeout(poll, POLL_MS);
+    }
+    /* ---------- raw CSI waterfall: separate websocket feed (LOCAL, not oneM2M) ---------- */
+    const WS_URL = "ws://localhost:8765";
+    const RF_ROWS = 150;
+    const rf = el("rawfall");
+    const rfctx = rf.getContext("2d");
+    let rfImage = null, rfN = 0, rfVmax = 40;
+
+    function viridis(t) {
+      t = Math.max(0, Math.min(1, t));
+      const r = Math.round(255 * Math.max(0, Math.min(1, -0.35 + 2.4 * t - 0.6 * t * t)));
+      const g = Math.round(255 * Math.max(0, Math.min(1, 0.05 + 0.95 * t)));
+      const b = Math.round(255 * Math.max(0, Math.min(1, 0.55 + 0.9 * t - 1.5 * t * t)));
+      return [r, g, b];
+    }
+    function rfInit(n) {
+      rfN = n; rf.width = n; rf.height = RF_ROWS;
+      rfImage = rfctx.createImageData(n, RF_ROWS);
+      for (let i = 0; i < rfImage.data.length; i += 4) rfImage.data[i + 3] = 255;
+    }
+    function rfPush(amp) {
+      if (!rfImage || amp.length !== rfN) rfInit(amp.length);
+      const d = rfImage.data, w = rfN;
+      d.copyWithin(0, w * 4, w * RF_ROWS * 4);          // scroll up
+      rfVmax = 0.98 * rfVmax + 0.02 * Math.max(Math.max(...amp), 10);
+      const off = (RF_ROWS - 1) * w * 4;
+      for (let x = 0; x < w; x++) {
+        const [r, g, b] = viridis(amp[x] / (rfVmax * 1.05));
+        d[off + x * 4] = r; d[off + x * 4 + 1] = g; d[off + x * 4 + 2] = b; d[off + x * 4 + 3] = 255;
+      }
+      rfctx.putImageData(rfImage, 0, 0);
+    }
+    function connectWS() {
+      const ws = new WebSocket(WS_URL);
+      ws.onmessage = e => {
+        try {
+          const m = JSON.parse(e.data);
+          if (m.amp) rfPush(m.amp);
+          if (m.fs != null) el("rate").textContent = m.fs.toFixed(1);
+          if (m.count != null) el("pkts").textContent = m.count;
+        } catch (_) { }
+      };
+      ws.onclose = () => setTimeout(connectWS, 2000);
+      ws.onerror = () => ws.close();
+    }
+    connectWS();
+
+    poll();
+
+  </script>
+</body>
+
+</html>
