@@ -172,7 +172,15 @@ async def ws_serve(ingest, host, port):
                                      return_exceptions=True)
             await asyncio.sleep(1.0 / WS_HZ)
 
-    async with websockets.serve(handler, host, port):
+    try:
+        server = await websockets.serve(handler, host, port)
+    except OSError:
+        print(f"\n[ws] ERROR: port {port} is already in use.")
+        print(f"[ws] A previous csi_ingest_ae.py is probably still running. Clear it:")
+        print(f"[ws]     pkill -f csi_ingest_ae.py   (wait 3s, then retry)")
+        print(f"[ws] or free the port:  kill $(lsof -t -i :{port})\n")
+        return
+    async with server:
         print(f"[ws] raw CSI (local, NOT via oneM2M) on ws://{host}:{port}")
         await pump()
 

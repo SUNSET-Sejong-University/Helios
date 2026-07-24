@@ -74,14 +74,16 @@ class OneM2M:
         st, resp = self._req("POST", self.root, TY["ae"], body, originator=prov)
         if st in (200, 201):
             return resp["m2m:ae"]["aei"]
-        if st == 409:                              # already registered -> recover aei
-            st2, resp2 = self._req("GET", f"{self.root}/{rn}", originator=prov)
-            if st2 == 200:
-                return resp2["m2m:ae"]["aei"]
-            st3, resp3 = self._req("GET", f"{self.root}/{rn}", originator=self.originator)
-            if st3 == 200:
-                return resp3["m2m:ae"]["aei"]
-            raise RuntimeError(f"AE '{rn}' exists but GET failed: {st2} {resp2}")
+        # 409 conflict OR 403 'already registered' -> the AE exists; recover its aei
+        already = (st == 409) or (st == 403 and isinstance(resp, str)
+                                  and "already registered" in resp.lower())
+        if already:
+            for orig in (prov, rn, self.originator):
+                st2, resp2 = self._req("GET", f"{self.root}/{rn}", originator=orig)
+                if st2 == 200 and isinstance(resp2, dict) and "m2m:ae" in resp2:
+                    return resp2["m2m:ae"]["aei"]
+            # exists but we couldn't read it back; the provisional id IS the aei in ACME
+            return prov
         raise RuntimeError(f"AE '{rn}' registration failed: {st} {resp}")
 
     def ensure_container(self, parent_path, rn, mni=60, originator=None):
