@@ -84,8 +84,16 @@ This shapes every design decision:
 PIR wiring: `VCC → 5V/VUSB`, `GND → GND`, `OUT → D2`. The HC-SR501 output is 3.3 V logic
 (safe for the SAMD21); power it from 5 V, **not** 3.3 V.
 
-<img width="1789" height="2048" alt="WhatsApp Image 2026-07-24 at 11 44 55 AM" src="https://github.com/user-attachments/assets/22551d0f-f8d3-4506-ab5d-be719d010c1c" />
-
+<table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/32852364-402f-4385-883d-cf7df59f3b9b" width="100%"></td>
+    <td><img src="https://github.com/user-attachments/assets/1e840987-dbb1-4faa-aee7-ee5827b6bfb4" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Nano 33 IoT (NINA/ESP32 + SAMD21) beside the HC-SR501 PIR</em></td>
+    <td align="center"><em>PIR wired to the Nano: VCC, OUT→D2, GND</em></td>
+  </tr>
+</table>
 
 ## Quick start
 
