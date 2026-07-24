@@ -84,7 +84,7 @@ This shapes every design decision:
 PIR wiring: `VCC → 5V/VUSB`, `GND → GND`, `OUT → D2`. The HC-SR501 output is 3.3 V logic
 (safe for the SAMD21); power it from 5 V, **not** 3.3 V.
 
-<img width="1913" height="1113" alt="WhatsApp Image 2026-07-24 at 11 29 01 AM" src="https://github.com/user-attachments/assets/92a876b1-489d-4f8f-848c-7c2d1e685f90" />
+<img width="1789" height="2048" alt="WhatsApp Image 2026-07-24 at 11 44 55 AM" src="https://github.com/user-attachments/assets/22551d0f-f8d3-4506-ab5d-be719d010c1c" />
 
 
 ## Quick start
