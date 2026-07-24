@@ -6,6 +6,19 @@ quick overview and file manifest, see `README.md`.
 
 ---
 
+## 0. Purpose
+ 
+The system is a **camera-free room monitor** for a local network. It answers, after the
+fact, *"was my room entered while I was away, when, and was the person moving around or
+just passing through?"* — using WiFi channel perturbations as the sensing medium instead
+of a camera. No images are ever captured; the raw signal stays on the local machine, and
+the only persisted output is an abstract, timestamped activity label held in a local
+oneM2M CSE that the owner queries on return. This purpose is why the design pairs a cheap
+PIR entry-trigger with CSI activity logging, and why the event history lives in a
+standardised, locally-hosted service layer rather than a video feed.
+ 
+---
+
 ## 1. Background: what CSI is and why it senses people
 
 WiFi does not travel in a single clean line from transmitter to receiver. The signal
@@ -337,3 +350,7 @@ structure, not the absolute-power shortcut.
   database backend for persistence.
 - **Vital signs excluded by design.** Heart rate is not recoverable on a single 8-bit link;
   respiration is redundant with `still` and unreliable under motion.
+- **Does not identify individuals, by design.** The system characterises presence and
+  activity (entered / still / moving), not identity. This is intentional: for a
+  privacy-preserving monitor, the inability to identify *who* entered is a feature, and it
+  is the design boundary — not a shortfall of the method.
