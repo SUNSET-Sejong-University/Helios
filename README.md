@@ -16,6 +16,31 @@ library does not expose.
 > does well — distinguishing motion from stillness and presence — is exactly what this
 > system delivers.
 
+
+## Motivation
+ 
+The goal is a **privacy-preserving, camera-free room monitor** for the local network.
+An owner leaving a room (or home) cannot watch it while away — but a camera is intrusive,
+records identifiable footage, and is itself a privacy and security liability. This system
+answers the practical question *"did someone enter my room while I was out, and what were
+they doing?"* **without any camera**.
+ 
+WiFi is the sensing medium instead of a lens: a person entering the room perturbs the
+WiFi channel, and that perturbation is logged as discrete activity events. When the owner
+returns, they query the event history over the local network and see whether the room was
+entered, when, and whether the intruder was moving around or merely passing through — all
+without a single image being captured.
+ 
+This shapes every design decision:
+ 
+- **PIR + CSI cascade** — the PIR cheaply flags *entry* (motion); CSI then logs *what
+  happened* (moving vs. still presence), which a PIR alone cannot report once motion stops.
+- **oneM2M as the log** — activity and presence events are stored as timestamped records
+  in a local CSE, so the owner (or any authorised app on the network) can review the
+  history after the fact rather than needing to watch a live feed.
+- **Camera-free by construction** — the raw signal never leaves the local machine, and no
+  visual data of any kind is produced; the only output is an abstract activity label.
+  
 <br>
 <img width="1349" height="647" alt="image" src="https://github.com/user-attachments/assets/3046b779-ba5b-4036-9fb7-197cf32567dd" />
 
@@ -128,6 +153,10 @@ distinguish two motionless postures.
   fall below its threshold. The CSI `still` class complements this.
 - **Vital signs out of scope.** Heart rate is not recoverable on a single 8-bit link;
   respiration is redundant with `still` and unreliable under motion — both excluded by design.
+- **Does not identify individuals, by design.** The system reports *presence and activity*
+  (entered / still / moving), never *who*. Identity inference is out of scope and
+  intentionally so — for a privacy-preserving monitor, not identifying the person is a
+  feature, not a gap.
 
 ## Acknowledgements
 
