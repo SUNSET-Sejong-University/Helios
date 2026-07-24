@@ -5,6 +5,7 @@ human activity (`empty` / `still` / `walking`) from the WiFi channel, gated by a
 motion sensor, with results published over the **oneM2M** IoT service layer and shown
 on a live dashboard.
 
+
 The system repurposes the u-blox NINA-W102 module inside an Arduino Nano 33 IoT — which
 houses a standard ESP32 — as a raw CSI extractor, something the stock `WiFiNINA`
 library does not expose.
@@ -14,6 +15,9 @@ library does not expose.
 > output is physically out of reach on this hardware (see *Limitations*). What one link
 > does well — distinguishing motion from stillness and presence — is exactly what this
 > system delivers.
+
+<br>
+<img width="1349" height="647" alt="image" src="https://github.com/user-attachments/assets/3046b779-ba5b-4036-9fb7-197cf32567dd" />
 
 ---
 
